@@ -67,7 +67,15 @@ if not st.session_state.logged_in:
         nu = st.text_input("Neuer User")
         np = st.text_input("Neues Passwort", type="password")
         if st.button("Konto erstellen"):
-            users_df = conn.read(worksheet="users", ttl=0)
+            # Versuche die Daten mit dem Dienstkonto zu laden
+                try:
+                   users_df = conn.read(worksheet="users", ttl=0)
+                except Exception:
+                    # Falls das fehlschlägt, versuchen wir es über die URL (für Fehlersuche)
+                    st.warning("Einfacher Lesezugriff wird versucht...")
+                    url = "https://docs.google.com/spreadsheets/d/1y9_RB9JQksvWmUpnX4BrBnVzEsnxmg4V0VIGVSwZzbA/export?format=csv&gid=0"
+        
+            users_df = pd.read_csv(url)
             if nu and np and nu not in users_df['username'].values:
                 new_user = pd.DataFrame([{"username": nu, "password": np}])
                 updated_users = pd.concat([users_df, new_user], ignore_index=True)
